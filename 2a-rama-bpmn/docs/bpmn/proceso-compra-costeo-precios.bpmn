@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Defs_Marini" targetNamespace="http://bpmn.io/schema/bpmn" exporter="TPI Organizacion Empresarial" exporterVersion="2.0">
+  <bpmn:message id="Msg_Mercaderia" name="Mercadería y factura" />
+  <bpmn:message id="Msg_Lista" name="Lista de precios" />
+  <bpmn:collaboration id="Collab_Marini">
+    <bpmn:documentation>Proceso de recepción de compras, costeo y actualización de precios de Distribuidora Marini con el Módulo de Gestión de Inventario y Costeo Dinámico. TPI de Organización Empresarial (UTN), Entrega N.º 4.</bpmn:documentation>
+    <bpmn:participant id="P_Proveedor" name="Proveedor" />
+    <bpmn:participant id="P_Marini" name="Distribuidora Marini" processRef="Proc_Compra" />
+    <bpmn:participant id="P_Clientes" name="Clientes (comercios)" />
+    <bpmn:messageFlow id="MF_Mercaderia" name="Mercadería y factura" sourceRef="P_Proveedor" targetRef="Start_Llega" />
+    <bpmn:messageFlow id="MF_Reclamo" name="Reclamo" sourceRef="Task_Reclamar" targetRef="P_Proveedor" />
+    <bpmn:messageFlow id="MF_Lista" name="Lista de precios" sourceRef="End_Lista" targetRef="P_Clientes" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_Compra" name="Recepción de compras, costeo y actualización de precios" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Marini">
+      <bpmn:lane id="L_Compras" name="Compras">
+        <bpmn:flowNodeRef>Task_Reclamar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Algo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Rechazada</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_Deposito" name="Depósito">
+        <bpmn:flowNodeRef>Start_Llega</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Controlar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Entrega</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_M1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Nuevo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_M2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Cargar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_Sistema" name="Sistema (módulo)">
+        <bpmn:flowNodeRef>GW_M4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Costo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Precios</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Suba</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_M3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Publicar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Lista</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_Direccion" name="Dirección General">
+        <bpmn:flowNodeRef>Task_Aprobar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Aprueba</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_Admin" name="Administración y Finanzas">
+        <bpmn:flowNodeRef>Task_Alta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Corregir</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Llega" name="Llega la mercadería con la factura">
+      <bpmn:outgoing>F01</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Start_Llega" messageRef="Msg_Mercaderia" />
+    </bpmn:startEvent>
+    <bpmn:manualTask id="Task_Controlar" name="Controlar cantidad, frío y vencimientos">
+      <bpmn:incoming>F01</bpmn:incoming>
+      <bpmn:outgoing>F02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="GW_Entrega" name="¿Llegó todo bien?">
+      <bpmn:incoming>F02</bpmn:incoming>
+      <bpmn:outgoing>F03</bpmn:outgoing>
+      <bpmn:outgoing>F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_Reclamar" name="Reclamar la diferencia al proveedor">
+      <bpmn:incoming>F04</bpmn:incoming>
+      <bpmn:outgoing>F05</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="GW_Algo" name="¿Quedó algo para cargar?">
+      <bpmn:incoming>F05</bpmn:incoming>
+      <bpmn:outgoing>F06</bpmn:outgoing>
+      <bpmn:outgoing>F07</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_M1">
+      <bpmn:incoming>F03</bpmn:incoming>
+      <bpmn:incoming>F06</bpmn:incoming>
+      <bpmn:outgoing>F08</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Rechazada" name="Entrega rechazada">
+      <bpmn:incoming>F07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="GW_Nuevo" name="¿Hay artículos nuevos?">
+      <bpmn:incoming>F08</bpmn:incoming>
+      <bpmn:outgoing>F09</bpmn:outgoing>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Alta" name="Dar de alta el artículo">
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_M2">
+      <bpmn:incoming>F09</bpmn:incoming>
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Cargar" name="Cargar la compra y sus lotes">
+      <bpmn:incoming>F12</bpmn:incoming>
+      <bpmn:outgoing>F13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_M4">
+      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:incoming>F22</bpmn:incoming>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_Costo" name="Calcular costo y stock">
+      <bpmn:incoming>F14</bpmn:incoming>
+      <bpmn:outgoing>F15</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_Costo"><bpmn:targetRef>DS_Base</bpmn:targetRef></bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Precios" name="Calcular precios nuevos">
+      <bpmn:incoming>F15</bpmn:incoming>
+      <bpmn:outgoing>F16</bpmn:outgoing>
+      <bpmn:property id="Prop_Precios" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DIA_Precios"><bpmn:sourceRef>DS_Base</bpmn:sourceRef><bpmn:targetRef>Prop_Precios</bpmn:targetRef></bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW_Suba" name="¿Algún artículo sube más del 15 %?">
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F17</bpmn:outgoing>
+      <bpmn:outgoing>F18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Aprobar" name="Revisar la suba">
+      <bpmn:incoming>F18</bpmn:incoming>
+      <bpmn:outgoing>F19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Corregir" name="Corregir la carga">
+      <bpmn:incoming>F21</bpmn:incoming>
+      <bpmn:outgoing>F22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_Aprueba" name="¿Aprueba la suba?">
+      <bpmn:incoming>F19</bpmn:incoming>
+      <bpmn:outgoing>F20</bpmn:outgoing>
+      <bpmn:outgoing>F21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_M3">
+      <bpmn:incoming>F17</bpmn:incoming>
+      <bpmn:incoming>F20</bpmn:incoming>
+      <bpmn:outgoing>F23</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_Publicar" name="Publicar la lista nueva">
+      <bpmn:incoming>F23</bpmn:incoming>
+      <bpmn:outgoing>F24</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_Publicar"><bpmn:targetRef>DS_Base2</bpmn:targetRef></bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Lista" name="Lista enviada a los clientes">
+      <bpmn:incoming>F24</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MED_End_Lista" messageRef="Msg_Lista" />
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DS_Base" name="Base de datos del módulo" dataStoreRef="DataStore_Modulo" />
+    <bpmn:dataStoreReference id="DS_Base2" name="Base de datos del módulo" dataStoreRef="DataStore_Modulo" />
+    <bpmn:sequenceFlow id="F01" sourceRef="Start_Llega" targetRef="Task_Controlar" />
+    <bpmn:sequenceFlow id="F02" sourceRef="Task_Controlar" targetRef="GW_Entrega" />
+    <bpmn:sequenceFlow id="F03" name="Sí" sourceRef="GW_Entrega" targetRef="GW_M1" />
+    <bpmn:sequenceFlow id="F04" name="No" sourceRef="GW_Entrega" targetRef="Task_Reclamar" />
+    <bpmn:sequenceFlow id="F05" sourceRef="Task_Reclamar" targetRef="GW_Algo" />
+    <bpmn:sequenceFlow id="F06" name="Sí" sourceRef="GW_Algo" targetRef="GW_M1" />
+    <bpmn:sequenceFlow id="F07" name="No" sourceRef="GW_Algo" targetRef="End_Rechazada" />
+    <bpmn:sequenceFlow id="F08" sourceRef="GW_M1" targetRef="GW_Nuevo" />
+    <bpmn:sequenceFlow id="F09" name="No" sourceRef="GW_Nuevo" targetRef="GW_M2" />
+    <bpmn:sequenceFlow id="F10" name="Sí" sourceRef="GW_Nuevo" targetRef="Task_Alta" />
+    <bpmn:sequenceFlow id="F11" sourceRef="Task_Alta" targetRef="GW_M2" />
+    <bpmn:sequenceFlow id="F12" sourceRef="GW_M2" targetRef="Task_Cargar" />
+    <bpmn:sequenceFlow id="F13" sourceRef="Task_Cargar" targetRef="GW_M4" />
+    <bpmn:sequenceFlow id="F14" sourceRef="GW_M4" targetRef="Task_Costo" />
+    <bpmn:sequenceFlow id="F15" sourceRef="Task_Costo" targetRef="Task_Precios" />
+    <bpmn:sequenceFlow id="F16" sourceRef="Task_Precios" targetRef="GW_Suba" />
+    <bpmn:sequenceFlow id="F17" name="No" sourceRef="GW_Suba" targetRef="GW_M3" />
+    <bpmn:sequenceFlow id="F18" name="Sí" sourceRef="GW_Suba" targetRef="Task_Aprobar" />
+    <bpmn:sequenceFlow id="F19" sourceRef="Task_Aprobar" targetRef="GW_Aprueba" />
+    <bpmn:sequenceFlow id="F20" name="Sí" sourceRef="GW_Aprueba" targetRef="GW_M3" />
+    <bpmn:sequenceFlow id="F21" name="No" sourceRef="GW_Aprueba" targetRef="Task_Corregir" />
+    <bpmn:sequenceFlow id="F22" sourceRef="Task_Corregir" targetRef="GW_M4" />
+    <bpmn:sequenceFlow id="F23" sourceRef="GW_M3" targetRef="Task_Publicar" />
+    <bpmn:sequenceFlow id="F24" sourceRef="Task_Publicar" targetRef="End_Lista" />
+  </bpmn:process>
+  <bpmn:dataStore id="DataStore_Modulo" name="Base de datos del módulo" />
+  <bpmndi:BPMNDiagram id="Diagram_Marini">
+    <bpmndi:BPMNPlane id="Plane_Marini" bpmnElement="Collab_Marini">
+      <bpmndi:BPMNShape id="P_Proveedor_di" bpmnElement="P_Proveedor" isHorizontal="true" bioc:stroke="#555555" bioc:fill="#F3F3F3" color:background-color="#F3F3F3" color:border-color="#555555"><dc:Bounds x="0" y="0" width="1795" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_Marini_di" bpmnElement="P_Marini" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#222222"><dc:Bounds x="0" y="100" width="1795" height="720" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_Compras_di" bpmnElement="L_Compras" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#222222"><dc:Bounds x="30" y="100" width="1765" height="125" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_Deposito_di" bpmnElement="L_Deposito" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#222222"><dc:Bounds x="30" y="225" width="1765" height="140" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_Sistema_di" bpmnElement="L_Sistema" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#F3F9FB" color:background-color="#F3F9FB" color:border-color="#222222"><dc:Bounds x="30" y="365" width="1765" height="215" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_Direccion_di" bpmnElement="L_Direccion" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#222222"><dc:Bounds x="30" y="580" width="1765" height="115" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_Admin_di" bpmnElement="L_Admin" isHorizontal="true" bioc:stroke="#222222" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#222222"><dc:Bounds x="30" y="695" width="1765" height="125" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_Clientes_di" bpmnElement="P_Clientes" isHorizontal="true" bioc:stroke="#555555" bioc:fill="#F3F3F3" color:background-color="#F3F3F3" color:border-color="#555555"><dc:Bounds x="0" y="860" width="1795" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Llega_di" bpmnElement="Start_Llega" bioc:stroke="#1E7B34" bioc:fill="#E6F4EA" color:background-color="#E6F4EA" color:border-color="#1E7B34">
+        <dc:Bounds x="77" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="50" y="311" width="90" height="44" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Controlar_di" bpmnElement="Task_Controlar" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="145" y="248" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Entrega_di" bpmnElement="GW_Entrega" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="287" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="267" y="318" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reclamar_di" bpmnElement="Task_Reclamar" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="352" y="128" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Algo_di" bpmnElement="GW_Algo" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="494" y="145" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="474" y="111" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_M1_di" bpmnElement="GW_M1" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="494" y="265" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Rechazada_di" bpmnElement="End_Rechazada" bioc:stroke="#A50E0E" bioc:fill="#FCE8E6" color:background-color="#FCE8E6" color:border-color="#A50E0E">
+        <dc:Bounds x="584" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="557" y="191" width="90" height="16" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Nuevo_di" bpmnElement="GW_Nuevo" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="576" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="556" y="231" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Alta_di" bpmnElement="Task_Alta" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="641" y="715" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_M2_di" bpmnElement="GW_M2" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="671" y="265" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Cargar_di" bpmnElement="Task_Cargar" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="753" y="248" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_M4_di" bpmnElement="GW_M4" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="886" y="420" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Costo_di" bpmnElement="Task_Costo" bioc:stroke="#005874" bioc:fill="#DCEEF3" color:background-color="#DCEEF3" color:border-color="#005874">
+        <dc:Bounds x="968" y="403" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Precios_di" bpmnElement="Task_Precios" bioc:stroke="#005874" bioc:fill="#DCEEF3" color:background-color="#DCEEF3" color:border-color="#005874">
+        <dc:Bounds x="1126" y="403" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Suba_di" bpmnElement="GW_Suba" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="1268" y="420" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1248" y="372" width="90" height="44" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Aprobar_di" bpmnElement="Task_Aprobar" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="1333" y="595" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Corregir_di" bpmnElement="Task_Corregir" bioc:stroke="#333333" bioc:fill="#FFFFFF" color:background-color="#FFFFFF" color:border-color="#333333">
+        <dc:Bounds x="1333" y="715" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Aprueba_di" bpmnElement="GW_Aprueba" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="1475" y="612" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1528" y="622" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_M3_di" bpmnElement="GW_M3" isMarkerVisible="true" bioc:stroke="#7A5B00" bioc:fill="#FFF6D8" color:background-color="#FFF6D8" color:border-color="#7A5B00">
+        <dc:Bounds x="1475" y="420" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publicar_di" bpmnElement="Task_Publicar" bioc:stroke="#005874" bioc:fill="#DCEEF3" color:background-color="#DCEEF3" color:border-color="#005874">
+        <dc:Bounds x="1557" y="403" width="110" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Lista_di" bpmnElement="End_Lista" bioc:stroke="#A50E0E" bioc:fill="#FCE8E6" color:background-color="#FCE8E6" color:border-color="#A50E0E">
+        <dc:Bounds x="1703" y="427" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1676" y="393" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Base_di" bpmnElement="DS_Base" bioc:stroke="#444444" bioc:fill="#F1F1F1" color:background-color="#F1F1F1" color:border-color="#444444"><dc:Bounds x="1077" y="511" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1130" y="521" width="90" height="30" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Base2_di" bpmnElement="DS_Base2" bioc:stroke="#444444" bioc:fill="#F1F1F1" color:background-color="#F1F1F1" color:border-color="#444444"><dc:Bounds x="1563" y="511" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1616" y="521" width="90" height="30" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F01_di" bpmnElement="F01">
+        <di:waypoint x="113" y="290" />
+        <di:waypoint x="145" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F02_di" bpmnElement="F02">
+        <di:waypoint x="255" y="290" />
+        <di:waypoint x="287" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F03_di" bpmnElement="F03">
+        <di:waypoint x="337" y="290" />
+        <di:waypoint x="494" y="290" />
+        <bpmndi:BPMNLabel><dc:Bounds x="343" y="270" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F04_di" bpmnElement="F04">
+        <di:waypoint x="312" y="265" />
+        <di:waypoint x="312" y="170" />
+        <di:waypoint x="352" y="170" />
+        <bpmndi:BPMNLabel><dc:Bounds x="318" y="239" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F05_di" bpmnElement="F05">
+        <di:waypoint x="462" y="170" />
+        <di:waypoint x="494" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F06_di" bpmnElement="F06">
+        <di:waypoint x="519" y="195" />
+        <di:waypoint x="519" y="265" />
+        <bpmndi:BPMNLabel><dc:Bounds x="525" y="199" width="16" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F07_di" bpmnElement="F07">
+        <di:waypoint x="544" y="170" />
+        <di:waypoint x="584" y="170" />
+        <bpmndi:BPMNLabel><dc:Bounds x="550" y="150" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F08_di" bpmnElement="F08">
+        <di:waypoint x="544" y="290" />
+        <di:waypoint x="576" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F09_di" bpmnElement="F09">
+        <di:waypoint x="626" y="290" />
+        <di:waypoint x="671" y="290" />
+        <bpmndi:BPMNLabel><dc:Bounds x="632" y="270" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="601" y="315" />
+        <di:waypoint x="601" y="757" />
+        <di:waypoint x="641" y="757" />
+        <bpmndi:BPMNLabel><dc:Bounds x="607" y="319" width="16" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="696" y="715" />
+        <di:waypoint x="696" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="721" y="290" />
+        <di:waypoint x="753" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13">
+        <di:waypoint x="863" y="290" />
+        <di:waypoint x="911" y="290" />
+        <di:waypoint x="911" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14">
+        <di:waypoint x="936" y="445" />
+        <di:waypoint x="968" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15_di" bpmnElement="F15">
+        <di:waypoint x="1078" y="445" />
+        <di:waypoint x="1126" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16">
+        <di:waypoint x="1236" y="445" />
+        <di:waypoint x="1268" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F17_di" bpmnElement="F17">
+        <di:waypoint x="1318" y="445" />
+        <di:waypoint x="1475" y="445" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1324" y="425" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F18_di" bpmnElement="F18">
+        <di:waypoint x="1293" y="470" />
+        <di:waypoint x="1293" y="637" />
+        <di:waypoint x="1333" y="637" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1299" y="474" width="16" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F19_di" bpmnElement="F19">
+        <di:waypoint x="1443" y="637" />
+        <di:waypoint x="1475" y="637" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F20_di" bpmnElement="F20">
+        <di:waypoint x="1500" y="612" />
+        <di:waypoint x="1500" y="470" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1506" y="590" width="16" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F21_di" bpmnElement="F21">
+        <di:waypoint x="1500" y="662" />
+        <di:waypoint x="1500" y="757" />
+        <di:waypoint x="1443" y="757" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1506" y="666" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F22_di" bpmnElement="F22">
+        <di:waypoint x="1333" y="757" />
+        <di:waypoint x="911" y="757" />
+        <di:waypoint x="911" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F23_di" bpmnElement="F23">
+        <di:waypoint x="1525" y="445" />
+        <di:waypoint x="1557" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F24_di" bpmnElement="F24">
+        <di:waypoint x="1667" y="445" />
+        <di:waypoint x="1703" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Mercaderia_di" bpmnElement="MF_Mercaderia">
+        <di:waypoint x="95" y="60" />
+        <di:waypoint x="95" y="272" />
+        <bpmndi:BPMNLabel><dc:Bounds x="102" y="153" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Reclamo_di" bpmnElement="MF_Reclamo">
+        <di:waypoint x="407" y="128" />
+        <di:waypoint x="407" y="60" />
+        <bpmndi:BPMNLabel><dc:Bounds x="411" y="71" width="60" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Lista_di" bpmnElement="MF_Lista">
+        <di:waypoint x="1721" y="463" />
+        <di:waypoint x="1721" y="860" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1624" y="825" width="90" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_Costo_di" bpmnElement="DOA_Costo">
+        <di:waypoint x="1052" y="487" />
+        <di:waypoint x="1087" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DIA_Precios_di" bpmnElement="DIA_Precios">
+        <di:waypoint x="1117" y="515" />
+        <di:waypoint x="1152" y="487" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_Publicar_di" bpmnElement="DOA_Publicar">
+        <di:waypoint x="1588" y="487" />
+        <di:waypoint x="1588" y="511" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
