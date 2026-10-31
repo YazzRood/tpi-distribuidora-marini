@@ -2,6 +2,8 @@
 
 Diccionario de datos del Módulo de Gestión de Inventario y Costeo Dinámico (Entrega N.º 3). Para cada campo indica el nombre, el tipo de dato, la clave y para qué sirve.
 
+> **Cambios en la Entrega N.º 4:** se sumó `COMPRA.fecha_costeo` para poder medir el indicador I3 (ver [docs/control/indicadores.md](../control/indicadores.md)): el campo `costeada` dice si una compra se costeó, pero no cuándo. También se aclaró cuándo cambia `ARTICULO.costo_actual` según el modelo BPMN. Queda pendiente la entidad de movimientos de stock (meta M3 de la Entrega N.º 2).
+
 ## Tipos de datos y claves
 
 | Tipo o clave | Qué significa |
@@ -45,6 +47,7 @@ Guarda los datos de cada factura de compra que llega al depósito.
 | `fecha_recepcion` | Date | – | Día en que llega la mercadería al depósito. |
 | `total` | Decimal | – | Importe total de la factura, en pesos. |
 | `costeada` | Boolean | – | Indica si ya se recalcularon los costos y precios con esta compra. |
+| `fecha_costeo` | Date | – | Día en que se actualizaron los costos y precios con esta compra. Sirve para medir el indicador I3 (precios al día, meta M4). *Agregado en la Entrega N.º 4.* |
 
 ## LOTE
 
@@ -72,7 +75,7 @@ Guarda los datos de cada producto que vende Marini.
 | `codigo_barras` | String | – | Código del envase. Va como texto porque puede empezar con cero. |
 | `descripcion` | String | – | Nombre. Ej.: «Queso cremoso horma 4 kg». |
 | `familia` | String | – | Lácteos, fiambres, aderezos o descartables. |
-| `costo_actual` | Decimal | – | Último costo final (de reposición). Lo actualiza cada compra. |
+| `costo_actual` | Decimal | – | Último costo final (de reposición). Se actualiza al publicar la lista nueva; si algún artículo sube más del 15 %, después de que la Dirección aprueba la suba. |
 | `margen_mayorista` | Decimal | – | Porcentaje de ganancia de la lista mayorista. |
 | `margen_minorista` | Decimal | – | Porcentaje de ganancia de la lista minorista. |
 | `stock_minimo` | Decimal | – | Cantidad mínima. Si el stock baja de ahí, el tablero avisa. |
