@@ -24,7 +24,7 @@ Docente titular: Gabriela Martínez · Docente adjunta: Noemi Andrea Ramos · Tu
 
 ## Enlaces
 
-- Tablero de gestión (GitHub Projects): https://github.com/users/YazzRood/projects/1
+- Tablero de gestión (GitHub Projects): https://github.com/users/YazzRood/projects/2
 - Modelo BPMN: carpeta [`docs/bpmn`](docs/bpmn)
 - Entregas en PDF: carpeta [`docs/entregas`](docs/entregas)
 
